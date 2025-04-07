@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Game Score Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+        crossorigin="anonymous"></script>
+    <script src="./js/main.js"></script>
+</head>
+
+<body data-bs-theme="dark">
+    <div class="container">
+        <div class="row p-2">
+            <div class="form-floating col-10">
+                <select class="form-select" id="gameSelection" aria-label="Floating label select example">
+                    <option value="0" selected></option>
+                </select>
+                <label for="gameSelection" class="ms-2">Select a game</label>
+            </div>
+            <button type="button" class="btn btn-primary col" title="Add New Game" data-bs-toggle="modal"
+                data-bs-target="#newGameModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="newGameModal" tabindex="-1" aria-labelledby="newGameModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="newGameModalLabel">Create a new game</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="newGameNameInput" placeholder="Create new game">
+                            <label for="newGameNameInput">Game Name</label>
+                        </div>
+                        <h2>Add Players</h2>
+                        <ul class="list-group list-group-flush" id="playersList">
+                        </ul>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="newGameAddPlayerInput"
+                                placeholder="Add New Player">
+                            <label for="newGameAddPlayerInput">Player Name</label>
+                        </div>
+                        <div class="row">
+                            <button type="button" class="btn btn-primary col m-3" title="Add New Game"
+                                id="addPlayerToNewGameBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-plus-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                    <path
+                                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                </svg> Add Player
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            id="closeNewGameModal">Close</button>
+                        <button type="button" class="btn btn-primary" id="createNewGameInModal">Create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visually-hidden">
+            <h1>Players</h1>
+            <ul class="list-group list-group-flush" id="playersList">
+            </ul>
+        </div>
+
+        <h1>Scores</h1>
+        <div class="table-responsive">
+            <table class="table table-striped text-end" id="scoresTable">
+                <thead>
+                    <tr id="scoresTableHeaders">
+                        <th scope="col">#</th>
+                    </tr>
+                </thead>
+                <tbody id="scoresTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vstack gap-3 mt-3">
+            <button type="button" class="btn btn-primary col" title="Add New Game" id="addRoundToGame"
+                data-bs-toggle="modal" data-bs-target="#newRoundModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                </svg> Add Round
+            </button>
+            <button type="button" class="btn btn-outline-secondary col" title="Copy Link" id="copyGameLinkButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy"
+                    viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z" />
+                </svg> Copy Shareable Link
+            </button>
+        </div>
+
+        <!-- New Round Modal -->
+        <div class="modal fade" id="newRoundModal" tabindex="-1" aria-labelledby="newRoundModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="newRoundModal">Add Round Scores for Game</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="newRoundModalBody">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            id="closeNewRoundModalButton">Close</button>
+                        <button type="button" class="btn btn-primary" id="submitNewRoundModalButton">Save
+                            changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
