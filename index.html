@@ -94,20 +94,22 @@
             </table>
         </div>
 
-        <h1>Leaderboard</h1>
-        <div class="table-responsive">
-            <table class="table table-striped text-end" id="leaderboardTable">
-                <thead>
-                    <tr id="leaderboardTableHeaders">
-                        <th scope="col">#</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardTableBody">
-                </tbody>
-            </table>
-        </div>
-
         <div class="fixed-bottom m-3">
+            <div>
+                <h1>Leaderboard</h1>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="leaderboardTable">
+                        <thead>
+                            <tr id="leaderboardTableHeaders">
+                                <th scope="col">#</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="vstack gap-3">
                 <button type="button" class="btn btn-primary col" title="Add New Game" id="addRoundToGame"
                     data-bs-toggle="modal" data-bs-target="#newRoundModal">
