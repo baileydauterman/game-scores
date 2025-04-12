@@ -2,7 +2,6 @@
 const params = new URLSearchParams(window.location.search);
 let games = JSON.parse(localStorage.getItem("rummeyGamesData")) || [];
 
-
 // DOM Elements
 const gameSelector = document.getElementById("gameSelection");
 const playersList = document.getElementById("playersList");
@@ -10,6 +9,11 @@ const scoresTablesHeaders = document.getElementById("scoresTableHeaders");
 const scoresTableBody = document.getElementById("scoresTableBody");
 const leaderboardTable = document.getElementById("leaderboardTableBody");
 let leaderboard = {};
+
+if (params.get("data")) {
+  let receivedGame = JSON.parse(atob(params.get("data")));
+  games.push(receivedGame);
+}
 
 function writeGames() {
   localStorage.setItem("rummeyGamesData", JSON.stringify(games));
@@ -51,7 +55,7 @@ function renderPlayerScoreHeaders() {
 }
 
 function getSelectedGame() {
-  let selectedValue = gameSelector.value;
+  let selectedValue = params.get("data") ? games.length : gameSelector.value;
 
   if (selectedValue === "" || selectedValue === "0") {
     return undefined;
