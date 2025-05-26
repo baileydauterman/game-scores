@@ -1,6 +1,7 @@
 // Retrieve existing names from localStorage or start with an empty array
 const params = new URLSearchParams(window.location.search);
-let games = JSON.parse(localStorage.getItem("rummeyGamesData")) || [];
+const localStorageKey = "gamesDataV2"
+let gm = GameManager.fromKey(localStorageKey);
 
 // DOM Elements
 const gameSelector = document.getElementById("gameSelection");
@@ -8,15 +9,15 @@ const playersList = document.getElementById("playersList");
 const scoresTablesHeaders = document.getElementById("scoresTableHeaders");
 const scoresTableBody = document.getElementById("scoresTableBody");
 const leaderboardTable = document.getElementById("leaderboardTableBody");
-let leaderboard = {};
 
 if (params.get("data")) {
   let receivedGame = JSON.parse(atob(params.get("data")));
-  games.push(receivedGame);
+  let g = Game.from(receivedGame);
+  gm.addGame(g);
 }
 
 function writeGames() {
-  localStorage.setItem("rummeyGamesData", JSON.stringify(games));
+  localStorage.setItem(localStorageKey, JSON.stringify(gm));
 }
 
 function renderGamesInSelector() {
@@ -24,7 +25,7 @@ function renderGamesInSelector() {
   let counter = 1;
   let gameName = params.get("name")
 
-  games.forEach(g => {
+  gm.games.forEach(g => {
     let option = document.createElement("option");
     option.value = counter++;
     option.text = g.name;
@@ -35,40 +36,21 @@ function renderGamesInSelector() {
   });
 }
 
-function renderPlayerScoreHeaders() {
-  let game = getSelectedGame();
+function renderScores() {
+  let game = gm.getSelectedGame();
+  scoresTableBody.innerHTML = '';
 
   if (game) {
-    leaderboard = {};
     scoresTablesHeaders.innerHTML = '<th scope="col">#</th>';
 
     game.players.forEach(p => {
       let playerHeader = document.createElement("th");
       playerHeader.scope = "col";
-      let playerHeaderCell = document.createTextNode(p);
+      let playerHeaderCell = document.createTextNode(p.name);
       playerHeader.appendChild(playerHeaderCell);
       scoresTablesHeaders.appendChild(playerHeader);
-
-      leaderboard[p] = 0;
     });
-  }
-}
 
-function getSelectedGame() {
-  let selectedValue = params.get("data") ? games.length : gameSelector.value;
-
-  if (selectedValue === "" || selectedValue === "0") {
-    return undefined;
-  }
-
-  return games[selectedValue - 1];
-}
-
-function renderScores() {
-  let game = getSelectedGame();
-  scoresTableBody.innerHTML = '';
-
-  if (game) {
     let counter = 1;
 
     game.rounds.forEach(round => {
@@ -79,12 +61,9 @@ function renderScores() {
 
       tr.appendChild(th);
 
-      game.players.forEach(player => {
+      round.scores.forEach(r => {
         let td = document.createElement("td");
-        let score = parseInt(round[player]);
-        td.textContent = score;
-        leaderboard[player] += score;
-
+        td.textContent = r.score;
         tr.appendChild(td);
       })
 
@@ -94,13 +73,13 @@ function renderScores() {
 }
 
 function renderLeaderboard() {
-  let game = getSelectedGame();
+  let game = gm.getSelectedGame();
   leaderboardTable.innerHTML = '';
 
   if (game) {
     let counter = 1;
 
-    const entries = Object.entries(leaderboard);
+    const entries = Object.entries(game.leaderboard);
     entries.sort((a, b) => b[1] - a[1]);
     const sortedScores = Object.fromEntries(entries);
 
@@ -130,7 +109,6 @@ function renderLeaderboard() {
 
 
 renderGamesInSelector();
-renderPlayerScoreHeaders();
 renderScores();
 renderLeaderboard();
 
@@ -168,25 +146,21 @@ createNewGameButton.addEventListener("click", function () {
     return;
   }
 
-  let gameMetadata = {
-    "name": newGameNameInput.value,
-    "players": newPlayers,
-    "rounds": []
-  };
+  let name = newGameNameInput.value
+  gm.addGameAndPlayers(name, newPlayers);
 
-  newPlayers = [];
   playersList.innerHTML = "";
   newGameNameInput.value = "";
+  newPlayers = []
 
-
-  games.push(gameMetadata);
-  localStorage.setItem("rummeyGamesData", JSON.stringify(games));
+  writeGames();
+  renderScores();
   renderGamesInSelector();
   closeNewGameModalButton.click();
 });
 
 gameSelector.addEventListener("change", function () {
-  renderPlayerScoreHeaders();
+  gm.changeSelectedGame(gameSelector.selectedIndex)
   renderScores();
   renderLeaderboard();
 });
@@ -198,7 +172,7 @@ const newRoundModalSubmitButton = document.getElementById("submitNewRoundModalBu
 const newRoundModalCloseButton = document.getElementById("closeNewRoundModalButton");
 
 newRoundModalButtonOpen.addEventListener("click", function () {
-  let game = getSelectedGame();
+  let game = gm.getSelectedGame();
   newRoundModalBody.innerHTML = "";
 
   if (game) {
@@ -208,7 +182,7 @@ newRoundModalButtonOpen.addEventListener("click", function () {
 
       let span = document.createElement("span");
       span.className = "input-group-text";
-      span.textContent = p;
+      span.textContent = p.name;
 
       let input = document.createElement("input");
       input.type = "number";
@@ -225,22 +199,19 @@ newRoundModalButtonOpen.addEventListener("click", function () {
 
 newRoundModalSubmitButton.addEventListener("click", function () {
   let nodes = document.querySelectorAll("#newRoundModalBody div");
-  let round = {};
+  let round = new Round();
 
   nodes.forEach(n => {
     let player = n.querySelector("span").textContent;
     let score = n.querySelector("input").value;
 
-    round[player] = score;
+    round.addScoreForPlayer(player, score);
   });
 
-  round["date"] = new Date().toLocaleString();
-
-  let game = getSelectedGame();
-  game.rounds.push(round);
+  let game = gm.getSelectedGame();
+  game.addRound(round);
 
   writeGames();
-  renderPlayerScoreHeaders();
   renderScores();
   renderLeaderboard();
   newRoundModalCloseButton.click();
@@ -248,7 +219,7 @@ newRoundModalSubmitButton.addEventListener("click", function () {
 
 const copyGameLinkButton = document.getElementById("copyGameLinkButton");
 copyGameLinkButton.addEventListener("click", function () {
-  let game = getSelectedGame();
+  let game = gm.getSelectedGame();
 
   if (game) {
     let gameData = btoa(JSON.stringify(game));
