@@ -1,7 +1,7 @@
 // Retrieve existing names from localStorage or start with an empty array
 const params = new URLSearchParams(window.location.search);
 const localStorageKey = "gamesDataV2"
-let gm = GameManager.fromKey(localStorageKey);
+let gameManager = GameManager.fromKey(localStorageKey);
 
 // DOM Elements
 const gameSelector = document.getElementById("gameSelection");
@@ -11,56 +11,38 @@ const scoresTableBody = document.getElementById("scoresTableBody");
 const leaderboardTable = document.getElementById("leaderboardTableBody");
 
 if (params.size >= 3) {
-  let g = new Game();
-  g.name = params.get("game");
-  params.get("players").split(",").forEach(p => {
-    if (p === undefined) {
-      return;
-    }
-    g.addPlayer(p);
-  });
-
-  params.keys().forEach(k => {
-    if (k === "game" || k === "players") {
-      return;
-    }
-
-    let count = 0;
-    round = new Round();
-    params.get(k).split(',').forEach(s => {
-      if (s === undefined) {
-        return;
-      }
-      round.addScoreForPlayer(g.players[count++].name, parseInt(s));
-    });
-    g.addRound(round);
-  });
-  
-  gm.addGame(g);
+  let g = Game.fromParameters(params);
+  gameManager.addGame(g);
 }
 
 function writeGames() {
-  localStorage.setItem(localStorageKey, JSON.stringify(gm));
+  localStorage.setItem(localStorageKey, JSON.stringify(gameManager));
 }
 
 function renderGamesInSelector() {
   gameSelector.innerHTML = "";
   let counter = 1;
-  let gameName = params.get("name")
 
-  gm.games.forEach(g => {
+  gameManager.games.forEach(g => {
     let option = document.createElement("option");
-    if (counter - 1 === gm.selectedGame) {
+    if (counter - 1 === gameManager.selectedGame) {
       option.selected = true;
     }
+
+    if (g.rounds.length > 0) {
+      option.text = g.name + "\n" + g.rounds[g.rounds.length - 1].date;
+    }
+    else {
+      option.text = g.name;
+    }
+
     option.value = counter++;
-    option.text = g.name;
     gameSelector.appendChild(option);
   });
 }
 
 function renderScores() {
-  let game = gm.getSelectedGame();
+  let game = gameManager.getSelectedGame();
   scoresTableBody.innerHTML = '';
 
   if (game) {
@@ -96,7 +78,7 @@ function renderScores() {
 }
 
 function renderLeaderboard() {
-  let game = gm.getSelectedGame();
+  let game = gameManager.getSelectedGame();
   leaderboardTable.innerHTML = '';
 
   if (game) {
@@ -130,10 +112,14 @@ function renderLeaderboard() {
   }
 }
 
+function refreshPage() {
+  writeGames();
+  renderGamesInSelector();
+  renderScores();
+  renderLeaderboard();
+}
 
-renderGamesInSelector();
-renderScores();
-renderLeaderboard();
+refreshPage();
 
 let newPlayers = [];
 const newGameAddPlayerButton = document.getElementById("addPlayerToNewGameBtn");
@@ -170,22 +156,20 @@ createNewGameButton.addEventListener("click", function () {
   }
 
   let name = newGameNameInput.value
-  gm.addGameAndPlayers(name, newPlayers);
+  gameManager.addGameAndPlayers(name, newPlayers);
 
   playersList.innerHTML = "";
   newGameNameInput.value = "";
   newPlayers = []
 
-  writeGames();
-  renderScores();
-  renderGamesInSelector();
+  gameSelector.selectedIndex = gameManager.selectedGame;
+  refreshPage();
   closeNewGameModalButton.click();
 });
 
 gameSelector.addEventListener("change", function () {
-  gm.changeSelectedGame(gameSelector.selectedIndex)
-  renderScores();
-  renderLeaderboard();
+  gameManager.changeSelectedGame(gameSelector.selectedIndex)
+  refreshPage();
 });
 
 const newRoundModal = document.getElementById("newRoundModal");
@@ -195,7 +179,7 @@ const newRoundModalSubmitButton = document.getElementById("submitNewRoundModalBu
 const newRoundModalCloseButton = document.getElementById("closeNewRoundModalButton");
 
 newRoundModalButtonOpen.addEventListener("click", function () {
-  let game = gm.getSelectedGame();
+  let game = gameManager.getSelectedGame();
   newRoundModalBody.innerHTML = "";
 
   if (game) {
@@ -224,54 +208,31 @@ newRoundModalButtonOpen.addEventListener("click", function () {
 
 newRoundModalSubmitButton.addEventListener("click", function () {
   let nodes = document.querySelectorAll("#newRoundModalBody div");
-  let round = new Round();
+  let game = gameManager.getSelectedGame();
 
-  nodes.forEach(n => {
-    let player = n.querySelector("span").textContent;
-    let score = n.querySelector("input").value;
+  if (game) {
+    let round = new Round();
 
-    if (score === "") {
-      score = 0;
-    }
+    nodes.forEach(n => {
+      let player = n.querySelector("span").textContent;
+      let score = n.querySelector("input").value;
 
-    round.addScoreForPlayer(player, score);
-  });
+      if (score === "") {
+        score = 0;
+      }
 
-  let game = gm.getSelectedGame();
-  game.addRound(round);
+      round.addScoreForPlayer(player, score);
+    });
 
-  writeGames();
-  renderScores();
-  renderLeaderboard();
+    game.addRound(round);
+  }
+
+  refreshPage();
   newRoundModalCloseButton.click();
 });
 
 const copyGameLinkButton = document.getElementById("copyGameLinkButton");
-copyGameLinkButton.addEventListener("click", function () {
-  let game = gm.getSelectedGame();
-
-  if (game) {
-    let gameData = btoa(JSON.stringify(game));
-    let parameters = new URLSearchParams();
-    parameters.set("game", game.name);
-    parameters.set("players", game.getPlayers());
-
-    game.rounds.forEach(r => {
-      let scores = [];
-
-      r.scores.forEach(p => {
-        scores.push(p.score);
-      });
-
-      parameters.set(new Date(r.date).getTime(), scores);
-    });
-    
-    // parameters.set("data", gameData);
-    let url = window.location.href + '?' + parameters.toString();
-    navigator.clipboard.writeText(url);
-
-    copyGameLinkButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg> Copied!'
-    new Promise(resolve => setTimeout(resolve, 6000));
-    copyGameLinkButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy"viewBox="0 0 16 16"><path fill-rule="evenodd"d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z" /></svg> Copy Shareable Link'
-  }
-});
+copyGameLinkButton.addEventListener(
+  "click",
+  () => gameManager.getGameAsUrlParameters(window.location.href)
+);

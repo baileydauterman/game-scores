@@ -70,7 +70,7 @@ class Game {
         console.log(round);
         this.updateLeaderboard(round);
     }
-    
+
     updateLeaderboard(round) {
         round.scores.forEach(s => {
             this.leaderboard[s.player] += s.score;
@@ -95,8 +95,37 @@ class Game {
 
         for (let r = 0; r < game.rounds.length; r++) {
             game.rounds[r] = Round.from(game.rounds[r]);
-            
+
         }
+
+        return game;
+    }
+
+    static fromParameters(params) {
+        let game = new Game();
+        game.name = params.get("game");
+        params.get("players").split(",").forEach(player => {
+            if (player === undefined) {
+                return;
+            }
+            game.addPlayer(player);
+        });
+
+        params.keys().forEach(roundKey => {
+            if (roundKey === "game" || roundKey === "players") {
+                return;
+            }
+
+            let count = 0;
+            let round = new Round();
+            params.get(roundKey).split(',').forEach(s => {
+                if (s === undefined) {
+                    return;
+                }
+                round.addScoreForPlayer(game.players[count++].name, parseInt(s));
+            });
+            game.addRound(round);
+        });
 
         return game;
     }
@@ -117,10 +146,7 @@ class GameManager {
         let game = new Game(name);
         game.addPlayers(players);
         this.games.push(game);
-
-        if (this.games.length === 1) {
-            this.changeSelectedGame(0);
-        }
+        this.changeSelectedGame(this.games.length - 1);
     }
 
     changeSelectedGame(idx) {
@@ -129,20 +155,46 @@ class GameManager {
 
     getSelectedGame() {
         if (this.selectedGame + 1 > this.games.length) {
-            return null;
+            return undefined;
         }
 
         return this.games[this.selectedGame];
     }
 
+    getGameAsUrlParameters(url) {
+        let game = this.getSelectedGame();
+
+        if (game) {
+            let parameters = new URLSearchParams();
+            parameters.set("game", game.name);
+            parameters.set("players", game.getPlayers());
+
+            game.rounds.forEach(r => {
+                let scores = [];
+
+                r.scores.forEach(p => {
+                    scores.push(p.score);
+                });
+
+                parameters.set(new Date(r.date).getTime(), scores);
+            });
+
+            // parameters.set("data", gameData);
+            url = url + '?' + parameters.toString();
+            navigator.clipboard.writeText(url);
+        }
+
+        return url;
+    }
+
     static fromKey(localStoreKey) {
         let json = JSON.parse(localStorage.getItem(localStoreKey)) || {};
-        let gm =  Object.assign(new GameManager(), json);
+        let gm = Object.assign(new GameManager(), json);
 
         for (let idx = 0; idx < gm.games.length; idx++) {
             gm.games[idx] = Game.from(gm.games[idx]);
         }
-        
+
         if (gm.games.length > 0) {
             gm.changeSelectedGame(0);
         }
