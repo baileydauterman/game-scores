@@ -10,9 +10,32 @@ const scoresTablesHeaders = document.getElementById("scoresTableHeaders");
 const scoresTableBody = document.getElementById("scoresTableBody");
 const leaderboardTable = document.getElementById("leaderboardTableBody");
 
-if (params.get("data")) {
-  let receivedGame = JSON.parse(atob(params.get("data")));
-  let g = Game.from(receivedGame);
+if (params.size >= 3) {
+  let g = new Game();
+  g.name = params.get("game");
+  params.get("players").split(",").forEach(p => {
+    if (p === undefined) {
+      return;
+    }
+    g.addPlayer(p);
+  });
+
+  params.keys().forEach(k => {
+    if (k === "game" || k === "players") {
+      return;
+    }
+
+    let count = 0;
+    round = new Round();
+    params.get(k).split(',').forEach(s => {
+      if (s === undefined) {
+        return;
+      }
+      round.addScoreForPlayer(g.players[count++].name, parseInt(s));
+    });
+    g.addRound(round);
+  });
+  
   gm.addGame(g);
 }
 
@@ -27,11 +50,11 @@ function renderGamesInSelector() {
 
   gm.games.forEach(g => {
     let option = document.createElement("option");
-    option.value = counter++;
-    option.text = g.name;
-    if (g.name === gameName) {
+    if (counter - 1 === gm.selectedGame) {
       option.selected = true;
     }
+    option.value = counter++;
+    option.text = g.name;
     gameSelector.appendChild(option);
   });
 }
@@ -189,7 +212,7 @@ newRoundModalButtonOpen.addEventListener("click", function () {
       input.inputmode = "numeric";
       input.pattern = "[0-9]*";
       input.classList = "form-control";
-      input.value = 0;
+      input.placeholder = 0;
 
       div.appendChild(span);
       div.appendChild(input);
@@ -206,6 +229,10 @@ newRoundModalSubmitButton.addEventListener("click", function () {
   nodes.forEach(n => {
     let player = n.querySelector("span").textContent;
     let score = n.querySelector("input").value;
+
+    if (score === "") {
+      score = 0;
+    }
 
     round.addScoreForPlayer(player, score);
   });
@@ -226,7 +253,20 @@ copyGameLinkButton.addEventListener("click", function () {
   if (game) {
     let gameData = btoa(JSON.stringify(game));
     let parameters = new URLSearchParams();
-    parameters.set("data", gameData);
+    parameters.set("game", game.name);
+    parameters.set("players", game.getPlayers());
+
+    game.rounds.forEach(r => {
+      let scores = [];
+
+      r.scores.forEach(p => {
+        scores.push(p.score);
+      });
+
+      parameters.set(new Date(r.date).getTime(), scores);
+    });
+    
+    // parameters.set("data", gameData);
     let url = window.location.href + '?' + parameters.toString();
     navigator.clipboard.writeText(url);
 

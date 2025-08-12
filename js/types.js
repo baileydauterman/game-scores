@@ -67,6 +67,7 @@ class Game {
 
     addRound(round) {
         this.rounds.push(round);
+        console.log(round);
         this.updateLeaderboard(round);
     }
     
@@ -74,6 +75,15 @@ class Game {
         round.scores.forEach(s => {
             this.leaderboard[s.player] += s.score;
         });
+    }
+
+    getPlayers() {
+        let returnPlayers = [];
+        this.players.forEach(p => {
+            returnPlayers.push(p.name);
+        });
+
+        return returnPlayers;
     }
 
     static from(json) {
