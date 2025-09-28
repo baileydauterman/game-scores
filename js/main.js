@@ -209,8 +209,7 @@ newRoundModalButtonOpen.addEventListener("click", function () {
 
       let input = document.createElement("input");
       input.type = "number";
-      input.inputmode = "numeric";
-      input.pattern = "[0-9]*";
+      input.inputmode = "decimal";
       input.classList = "form-control";
       input.placeholder = 0;
 
