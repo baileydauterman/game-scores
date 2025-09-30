@@ -31,7 +31,7 @@ if (params.size >= 3) {
       if (s === undefined) {
         return;
       }
-      round.addScoreForPlayer(g.players[count++].name, parseInt(s));
+      round.addScoreForPlayer(g.players[count++].name, parseFloat(s));
     });
     g.addRound(round);
   });
@@ -120,7 +120,7 @@ function renderLeaderboard() {
       tr.appendChild(td);
 
       td = document.createElement("td");
-      score = parseInt(sortedScores[player]);
+      score = parseFloat(sortedScores[player]);
       td.textContent = score;
 
       tr.appendChild(td);
@@ -210,6 +210,7 @@ newRoundModalButtonOpen.addEventListener("click", function () {
       let input = document.createElement("input");
       input.type = "number";
       input.inputmode = "decimal";
+      input.pattern = "(-?[0-9]+([\.,][0-9]+)?)"
       input.classList = "form-control";
       input.placeholder = 0;
 

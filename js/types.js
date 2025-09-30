@@ -11,7 +11,7 @@ class Player {
 class Score {
     constructor(player, score) {
         this.player = player
-        this.score = parseInt(score);
+        this.score = parseFloat(score);
     }
 
     static from(json) {
