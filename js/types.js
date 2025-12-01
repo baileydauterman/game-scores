@@ -1,6 +1,7 @@
 class Player {
     constructor(name) {
         this.name = name;
+        this.uuid = crypto.randomUUID();
     }
 
     static from(json) {
@@ -21,8 +22,8 @@ class Score {
 
 class Round {
     constructor() {
-        this.date = new Date().toLocaleString();;
-        this.scores = []
+        this.date = new Date().toLocaleString();
+        this.scores = [];
     }
 
     addScore(score) {
@@ -125,6 +126,13 @@ class GameManager {
 
     changeSelectedGame(idx) {
         this.selectedGame = idx;
+    }
+
+    deleteSelectedGame() {
+        if (this.getSelectedGame()) {
+            this.games.splice(this.selectedGame, 1);
+            this.changeSelectedGame(0);
+        }
     }
 
     getSelectedGame() {
