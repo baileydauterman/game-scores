@@ -10,6 +10,8 @@ const scoresTablesHeaders = document.getElementById("scoresTableHeaders");
 const scoresTableBody = document.getElementById("scoresTableBody");
 const leaderboardTable = document.getElementById("leaderboardTableBody");
 const titleElement = document.getElementsByTagName("title")[0];
+const leaderboardSection = document.getElementById("leaderboardSection");
+const scoresSection = document.getElementById("scoresSection");
 
 if (params.size >= 3) {
   let g = new Game();
@@ -65,6 +67,7 @@ function renderScores() {
   scoresTableBody.innerHTML = '';
 
   if (game) {
+    scoresSection.classList.remove("visually-hidden");
     scoresTablesHeaders.innerHTML = '<th scope="col">#</th>';
 
     game.players.forEach(p => {
@@ -93,6 +96,8 @@ function renderScores() {
 
       scoresTableBody.appendChild(tr);
     });
+  } else {
+    scoresSection.classList.add("visually-hidden");
   }
 }
 
@@ -101,6 +106,7 @@ function renderLeaderboard() {
   leaderboardTable.innerHTML = '';
 
   if (game) {
+    leaderboardSection.classList.remove("visually-hidden");
     let counter = 1;
 
     const entries = Object.entries(game.leaderboard);
@@ -133,6 +139,8 @@ function renderLeaderboard() {
 
       leaderboardTable.appendChild(tr);
     });
+  } else {
+    leaderboardSection.classList.add("visually-hidden");
   }
 }
 
